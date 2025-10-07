@@ -17,29 +17,13 @@ public class Menu {
             printMenu();
             input = sc.nextLine();
             switch (input){
-                case "1":
-                    productos.add(CrearProducto(sc));
-                    break;
-                case "2":
-                    MostrarProductos(productos);
-                    break;
-                case "3":
-                    MostrarProductos(productos);
-                    ActualizarProducto(sc, productos);
-                    break;
-                case "4":
-                    MostrarProductos(productos);
-                    EliminarProducto(productos);
-                    break;
-                case "5":
-                    BuscarProductoxNombre(productos);
-                    break;
-                case "0":
-                    System.out.println("CHAU!");
-                    break;
-                default:
-                    System.out.println("Tu ingreso no fue valido!");
-                    break;
+                case "1" -> CrearProducto(sc, productos);
+                case "2" -> MostrarProductos(productos);
+                case "3" -> ActualizarProducto(sc, productos);
+                case "4"-> EliminarProducto(sc, productos);
+                case "5"-> BuscarProductoxNombre(sc, productos);
+                case "0" -> System.out.println("CHAU!");
+                default -> System.out.println("Tu ingreso no fue valido!");
             }
         }while(!input.equals("0"));
     }
@@ -57,7 +41,7 @@ public class Menu {
 
     //CRUD
 
-    private Productos CrearProducto(Scanner sc) {
+    private void CrearProducto(Scanner sc, List<Productos> productos) {
         System.out.println("Ingrese el nombre del producto: ");
         String nombre = sc.nextLine();
 
@@ -67,7 +51,8 @@ public class Menu {
         System.out.println("Ingrese la cantidad del producto: ");
         int cantidad = sc.nextInt();
 
-        return new Productos(nombre, precio, cantidad);
+        Productos productoNuevo = new Productos(nombre, precio, cantidad);
+        productos.add(productoNuevo);
     }
 
     private void MostrarProductos(List<Productos> productos) {
@@ -112,9 +97,7 @@ public class Menu {
         }
     }
 
-    private void BuscarProductoxNombre(List<Productos> productos) {
-        Scanner sc = new Scanner(System.in);
-
+    private void BuscarProductoxNombre(Scanner sc, List<Productos> productos) {
         System.out.println("Ingrese el nombre del producto: ");
         String nombre = sc.nextLine();
 
@@ -130,25 +113,15 @@ public class Menu {
         }
     }
 
-    private void EliminarProducto(List<Productos> productos) {
-        Scanner sc = new Scanner(System.in);
-
+    private void EliminarProducto(Scanner sc, List<Productos> productos) {
         System.out.println("Ingresa el código del producto a eliminar: ");
         String cod = sc.nextLine();
 
-        boolean encontro = false;
-        for (Productos producto : productos ) {
+        boolean borrado = productos.removeIf(p -> p.getCodigo() == Integer.parseInt(cod));
 
-            if (producto.getCodigo() == Integer.parseInt(cod)) {
-
-                productos.remove(producto);
-
-                encontro = true;
-            }
-        }
-
-        if (!encontro) {
+        if (borrado)
+            System.out.println("Producto eliminado correctamente!");
+        else
             System.out.println("No se encontró ningún producto con ese código!");
-        }
     }
 }
