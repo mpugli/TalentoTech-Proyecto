@@ -22,7 +22,7 @@ public class Menu {
                 case "2" -> MostrarProductos(productos);
                 case "3" -> ActualizarProducto(sc, productos);
                 case "4" -> EliminarProducto(sc, productos);
-                case "5" -> BuscarProductoxNombre(sc, productos);
+                case "5" -> BuscarProductoxNombre(productos);
                 case "0" -> {
                     System.out.println("\nCHAU!\n");
                     return;
