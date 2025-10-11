@@ -1,18 +1,18 @@
 package proyecto.model;
 
-public class Productos {
-    private static int contador = 0;
-    private int codigo;
+public class Producto {
+    private static int contador = 1;
+    private final int codigo;
     private String nombre;
     private double precio;
     private int stock;
 
-    public Productos(String nombre, double precio,  int stock) {
+    public Producto(String nombre, double precio,  int stock) {
         this.nombre = nombre;
         this.precio = precio;
         this.stock = stock;
-        contador++;
         this.codigo = contador;
+        contador++;
     }
 
     public void setNombre(String nombre) {
@@ -35,6 +35,10 @@ public class Productos {
         return nombre;
     }
 
+    public double getPrecio() { return precio; }
+
+    public int getStock() { return stock; }
+
     public void verProducto() {
         System.out.printf("""
 
@@ -43,5 +47,11 @@ public class Productos {
             Precio: %.2f
             Stock: %d
             """, codigo, nombre, precio, stock);
+    }
+
+    public void descontarStock(int stock_a_reducir) {
+        if (stock_a_reducir <= this.stock) {
+            this.stock -= stock_a_reducir;
+        }
     }
 }

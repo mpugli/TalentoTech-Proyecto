@@ -2,7 +2,9 @@ package proyecto.menu;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
-import proyecto.model.Productos;
+import proyecto.model.LineaPedido;
+import proyecto.model.Pedido;
+import proyecto.model.Producto;
 import proyecto.utils.Utilidades;
 
 public class Menu {
@@ -11,7 +13,9 @@ public class Menu {
     final int CANTIDAD_MAX = 100;
 
     public void run() {
-        List<Productos> productos = new ArrayList<>();
+        List<Producto> productos = new ArrayList<>();
+        List<Pedido> pedidos = new ArrayList<>();
+
         cargarProductosIniciales(productos);
 
         while(true) {
@@ -19,12 +23,17 @@ public class Menu {
             String input = Utilidades.limpiarTexto(sc.nextLine());
             switch (input){
                 case "1" -> CrearProducto(productos);
-                case "2" -> MostrarProductos(productos);
-                case "3" -> ActualizarProducto(sc, productos);
+                case "2" ->
+                    {
+                        MostrarProductos(productos);
+                        Utilidades.enterParaContinuar();
+                    }
+                case "3" -> BuscaryModificar(sc, productos);
                 case "4" -> EliminarProducto(sc, productos);
-                case "5" -> BuscarProductoxNombre(productos);
+                case "5" -> GenerarPedido(sc, productos, pedidos);
+                case "6" -> ListarPedidos(pedidos);
                 case "0" -> {
-                    System.out.println("\nCHAU!\n");
+                    System.out.println("\nNos vemos!! Gracias por usar el programa!\n");
                     return;
                 }
                 default -> System.out.println("Tu ingreso no fue valido!");
@@ -33,20 +42,21 @@ public class Menu {
     }
 
     private void printMenu() {
-        System.out.println("\n=== Gestión de Productos ===");
+        System.out.println("\n=== Gestión de Producto ===");
         System.out.println("1) Crear producto");
         System.out.println("2) Listar (paginado)");
-        System.out.println("3) Actualizar producto");
+        System.out.println("3) Buscar / Actualizar producto");
         System.out.println("4) Eliminar producto");
-        System.out.println("5) Buscar por nombre");
+        System.out.println("5) Generar Pedido");
+        System.out.println("6) Listar pedidos");
         System.out.println("0) Salir");
-        System.out.print("> Elegí una opción: ");
+        System.out.print("\n> Elegí una opción: ");
     }
 
     //CRUD
 
-    private void CrearProducto(List<Productos> productos) {
-        System.out.println("Ingrese el nombre del producto: ");
+    private void CrearProducto(List<Producto> productos) {
+        System.out.println("\nIngrese el nombre del producto: ");
         String nombre = Utilidades.pedirNombre(true);
 
         System.out.println("Ingrese el precio del producto: ");
@@ -55,89 +65,110 @@ public class Menu {
         System.out.println("Ingrese la cantidad del producto: ");
         int cantidad = Utilidades.pedirCantidad(true, CANTIDAD_MAX);
 
-        Productos productoNuevo = new Productos(nombre, precio, cantidad);
+        Producto productoNuevo = new Producto(nombre, precio, cantidad);
         productos.add(productoNuevo);
 
         System.out.println("Producto agregado correctamente!");
         Utilidades.enterParaContinuar();
     }
 
-    private void MostrarProductos(List<Productos> productos) {
-        for (Productos producto : productos) {
+    private void MostrarProductos(List<Producto> productos) {
+        for (Producto producto : productos) {
             producto.verProducto();
         }
-        Utilidades.enterParaContinuar();
     }
 
-    private void ActualizarProducto(Scanner sc, List<Productos> productos) {
-        System.out.println("Ingresa el código del producto a actualizar: ");
-        String cod = sc.nextLine();
+    private void BuscaryModificar(Scanner sc, List<Producto> productos) {
 
-        boolean encontro = false;
-        for (Productos producto : productos ) {
-
-            if (producto.getCodigo() == Integer.parseInt(cod)) {
-
-                System.out.println("Ingrese el nombre (enter para no modificar): ");
-                String nombre = Utilidades.pedirNombre(false);
-
-                if (!nombre.isEmpty()){
-                    producto.setNombre(nombre);
-                }
-
-                System.out.println("Ingrese el precio (enter para no modificar): ");
-                double precio = Utilidades.pedirPrecio(false, PRECIO_MAX);
-
-                if (precio != -1){
-                    producto.setPrecio(precio);
-                }
-
-                System.out.println("Ingrese el stock (enter para no modificar): ");
-                int stock = Utilidades.pedirCantidad(false, CANTIDAD_MAX);
-
-                if (stock != -1){
-                    producto.setStock(stock);
-                }
-
-                encontro = true;
-            }
-        }
-
-        if (!encontro) {
-            System.out.println("No se encontró ningún producto con ese código!");
-        }
-
-        Utilidades.enterParaContinuar();
-    }
-
-    private void BuscarProductoxNombre(List<Productos> productos) {
-        System.out.println("Ingresa el nombre del producto/s a buscar: ");
+        System.out.println("\nIngresa el nombre del producto/s a buscar: ");
         String nombre = Utilidades.pedirNombre(true);
 
         nombre = Utilidades.limpiarTexto(nombre);
 
-        List<Productos> resultados = new ArrayList<>();
+        List<Producto> resultados = new ArrayList<>();
 
-        boolean encontro = false;
-        for (Productos prod : productos) {
+        for (Producto prod : productos) {
            String nombreNormalizado = Utilidades.limpiarTexto(prod.getNombre());
 
            if (nombreNormalizado.contains(nombre)) {
                resultados.add(prod);
            }
-           encontro = true;
         }
 
-        if (encontro) {
-            MostrarProductos(resultados);
-        }else {
+        if (resultados.isEmpty()) {
             System.out.println("No existe el producto con ese nombre!");
             Utilidades.enterParaContinuar();
+            return;
+        }
+
+        MostrarProductos(resultados);
+
+        if (resultados.size() == 1) {
+            System.out.println("\nDesea modificar este producto (S / N): ");
+            String input = sc.nextLine();
+
+            if (input.equalsIgnoreCase("n")) {
+                Utilidades.enterParaContinuar();
+                return;
+            }
+
+            ActualizarProducto(resultados.getLast());
+            Utilidades.enterParaContinuar();
+            return;
+        }
+
+        if (resultados.size() > 1) {
+            System.out.println("\nIngrese el ID del producto quiere modificar (N si no quiere modificar): ");
+
+            while (true) {
+                String input = sc.nextLine();
+
+                if (input.equalsIgnoreCase("n")) {
+                    Utilidades.enterParaContinuar();
+                    return;
+                }
+
+                for (Producto prod : resultados) {
+                    try {
+                        if (prod.getCodigo() == Integer.parseInt(input)) {
+                            ActualizarProducto(prod);
+                            Utilidades.enterParaContinuar();
+                            return;
+                        }
+                    } catch (NumberFormatException e) {
+                        System.out.println("Ingrese un ID valido (N para salir)!");
+                    }
+                }
+            }
         }
     }
 
-    private void EliminarProducto(Scanner sc, List<Productos> productos) {
-        System.out.println("Ingresa el código del producto a eliminar: ");
+    private void ActualizarProducto(Producto producto) {
+
+        System.out.println("\nIngrese el nombre (enter para no modificar): ");
+        String nombre = Utilidades.pedirNombre(false);
+
+        if (!nombre.isEmpty()){
+            producto.setNombre(nombre);
+        }
+
+        System.out.println("Ingrese el precio (enter para no modificar): ");
+        double precio = Utilidades.pedirPrecio(false, PRECIO_MAX);
+
+        if (precio != -1){
+            producto.setPrecio(precio);
+        }
+
+        System.out.println("Ingrese el stock (enter para no modificar): ");
+        int stock = Utilidades.pedirCantidad(false, CANTIDAD_MAX);
+
+        if (stock != -1){
+            producto.setStock(stock);
+        }
+    }
+
+    private void EliminarProducto(Scanner sc, List<Producto> productos) {
+        System.out.println("\nIngresa el código del producto a eliminar: ");
         String cod = sc.nextLine();
 
         boolean borrado = productos.removeIf(p -> p.getCodigo() == Integer.parseInt(cod));
@@ -150,17 +181,88 @@ public class Menu {
         Utilidades.enterParaContinuar();
     }
 
-    private static void cargarProductosIniciales(List<Productos> productos) {
+    private void GenerarPedido(Scanner sc, List<Producto> productos, List<Pedido> pedidos) {
 
-        productos.add(new Productos("Coca-Cola 2.25L", 2850.00, 50));
-        productos.add(new Productos("Yerba Mate Playadito 1kg", 4300.50, 30));
-        productos.add(new Productos("Fernet Branca 750ml", 8900.00, 24));
-        productos.add(new Productos("Galletitas Oreo 118g", 1150.00, 80));
-        productos.add(new Productos("Leche La Serenísima 1L", 1050.75, 45));
-        productos.add(new Productos("Azúcar Ledesma 1kg", 980.00, 100));
-        productos.add(new Productos("Papas Fritas Lays Clásicas 150g", 2300.00, 40));
-        productos.add(new Productos("Alfajor Jorgito de Chocolate", 700.00, 120));
-        productos.add(new Productos("Pan Lactal Fargo", 2100.00, 25));
-        productos.add(new Productos("Queso Cremoso Punta del Agua (kg)", 7500.00, 15));
+        Pedido pedido = new Pedido();
+        boolean existe = false;
+
+        while(true) {
+            System.out.println("\nIngresa el ID del producto a agregar (fin para terminar): ");
+            String id = sc.nextLine();
+
+            if (id.equalsIgnoreCase("fin")) break;
+
+            Producto prod = ConsultarStockId(id, productos);
+
+            if (prod == null) {
+                System.out.println("No existe el producto con ese id! Pruebe nuevamente");
+                continue; //No encontro el producto
+            }
+
+            if (prod.getStock() > 0) {
+                LineaPedido lPedido = CrearLineaPedido(prod);
+                pedido.agregarLinea(lPedido);
+                if (!existe) existe = true;
+            } else  {
+                System.out.println("No hay mas stock de ese producto!");
+            }
+        }
+
+        if (existe) {
+            pedidos.add(pedido);
+            System.out.println("\nPedido terminado!");
+        } else {
+            System.out.println("\nNo se genero su pedido");
+        }
+        Utilidades.enterParaContinuar();
+    }
+
+    private Producto ConsultarStockId(String id, List<Producto> productos) {
+        for (Producto producto : productos) {
+            if (producto.getCodigo() == Integer.parseInt(id)) {
+                return producto;
+            }
+        }
+        return null;
+    }
+
+    private LineaPedido CrearLineaPedido(Producto prod) {
+        System.out.println(prod.getNombre()+" | Cantidad: "+prod.getStock());
+        while(true) {
+            System.out.println("Ingrese la cantidad que desea: ");
+            String cant = sc.nextLine();
+            try {
+                int cantidad = Integer.parseInt(cant);
+                if (prod.getStock() >= cantidad) {
+                    System.out.println("Producto agregado correctamente!");
+                    return new LineaPedido(prod, cantidad);
+                } else {
+                    System.out.println("No hay tanto stock! Ingrese nuevamente");
+                }
+            } catch (NumberFormatException e) {
+                System.out.println("Ingreso invalido!");
+            }
+        }
+    }
+
+    private void ListarPedidos(List<Pedido> pedidos) {
+        for (Pedido pedido : pedidos) {
+            pedido.verPedido();
+        }
+        Utilidades.enterParaContinuar();
+    }
+
+    private static void cargarProductosIniciales(List<Producto> productos) {
+
+        productos.add(new Producto("Coca-Cola 2.25L", 2850.00, 50));
+        productos.add(new Producto("Yerba Mate Playadito 1kg", 4300.50, 30));
+        productos.add(new Producto("Fernet Branca 750ml", 8900.00, 24));
+        productos.add(new Producto("Galletitas Oreo 118g", 1150.00, 80));
+        productos.add(new Producto("Leche La Serenísima 1L", 1050.75, 45));
+        productos.add(new Producto("Azúcar Ledesma 1kg", 980.00, 100));
+        productos.add(new Producto("Papas Fritas Lays Clásicas 150g", 2300.00, 40));
+        productos.add(new Producto("Alfajor Jorgito de Chocolate", 700.00, 120));
+        productos.add(new Producto("Pan Lactal Fargo", 2100.00, 25));
+        productos.add(new Producto("Queso Cremoso Punta del Agua (kg)", 7500.00, 15));
     }
 }
