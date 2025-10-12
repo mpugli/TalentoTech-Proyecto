@@ -199,8 +199,10 @@ public class Menu {
                 continue; //No encontro el producto
             }
 
-            if (prod.getStock() > 0) {
-                LineaPedido lPedido = CrearLineaPedido(prod);
+            int stockDisponible = pedido.getStockDisponible(prod);
+
+            if (stockDisponible > 0) {
+                LineaPedido lPedido = CrearLineaPedido(prod, stockDisponible);
                 pedido.agregarLinea(lPedido);
                 if (!existe) existe = true;
             } else  {
@@ -209,12 +211,31 @@ public class Menu {
         }
 
         if (existe) {
-            pedidos.add(pedido);
-            System.out.println("\nPedido terminado!");
+            System.out.println("Desea guardar su pedido? S/N: ");
+            String input = sc.nextLine();
+
+            if (input.equalsIgnoreCase("n")) {
+                System.out.println("\nNo se genero su pedido");
+                Utilidades.enterParaContinuar();
+                return;
+            }
+
+            ConfirmarPedido(pedido, pedidos);
         } else {
             System.out.println("\nNo se genero su pedido");
         }
         Utilidades.enterParaContinuar();
+    }
+
+    private void ConfirmarPedido(Pedido pedido, List<Pedido> pedidos) {
+        for (LineaPedido linea : pedido.getLineaPedidos()) {
+            Producto productoAfectado = linea.getProducto();
+            int cantidadComprada = linea.getCantidad();
+            int nuevoStock = productoAfectado.getStock() - cantidadComprada;
+            productoAfectado.setStock(nuevoStock);
+        }
+        pedidos.add(pedido);
+        System.out.println("\nPedido confirmado y stock actualizado!");
     }
 
     private Producto ConsultarStockId(String id, List<Producto> productos) {
@@ -226,18 +247,18 @@ public class Menu {
         return null;
     }
 
-    private LineaPedido CrearLineaPedido(Producto prod) {
-        System.out.println(prod.getNombre()+" | Cantidad: "+prod.getStock());
+    private LineaPedido CrearLineaPedido(Producto prod, int stockDisponible) {
+        System.out.println(prod.getNombre()+" | Cantidad: "+stockDisponible);
         while(true) {
             System.out.println("Ingrese la cantidad que desea: ");
             String cant = sc.nextLine();
             try {
                 int cantidad = Integer.parseInt(cant);
-                if (prod.getStock() >= cantidad) {
+                if (stockDisponible >= cantidad) {
                     System.out.println("Producto agregado correctamente!");
                     return new LineaPedido(prod, cantidad);
                 } else {
-                    System.out.println("No hay tanto stock! Ingrese nuevamente");
+                    System.out.println("No hay más stock de ese producto o ya agregó todo el stock disponible a su pedido.");
                 }
             } catch (NumberFormatException e) {
                 System.out.println("Ingreso invalido!");

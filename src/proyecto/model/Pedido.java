@@ -17,7 +17,6 @@ public class Pedido {
 
     public void agregarLinea(LineaPedido lineaPedido) {
         lineaPedidos.add(lineaPedido);
-        lineaPedido.getProducto().descontarStock(lineaPedido.getCantidad());
         total += lineaPedido.getCantidad() * lineaPedido.getProducto().getPrecio();
     }
 
@@ -28,5 +27,19 @@ public class Pedido {
             System.out.println("Cantidad Pedida: " + lineaPedido.getCantidad());
         }
         System.out.println("\nTotal a abonar: " + total);
+    }
+
+    public int getStockDisponible(Producto producto) {
+        int cantidadYaEnPedido = 0;
+        for (LineaPedido linea : this.lineaPedidos) {
+            if (linea.getProducto().getCodigo() == producto.getCodigo()) {
+                cantidadYaEnPedido += linea.getCantidad();
+            }
+        }
+        return producto.getStock() - cantidadYaEnPedido;
+    }
+
+    public List<LineaPedido> getLineaPedidos() {
+        return lineaPedidos;
     }
 }
