@@ -171,12 +171,25 @@ public class Menu {
         System.out.println("\nIngresa el código del producto a eliminar: ");
         String cod = sc.nextLine();
 
-        boolean borrado = productos.removeIf(p -> p.getCodigo() == Integer.parseInt(cod));
+        for (Producto prod : productos) {
+            if (prod.getCodigo() == Integer.parseInt(cod)) {
+                prod.verProducto();
+                System.out.println("Seguro que desea eliminar este producto (S/N): ");
+                String input = sc.nextLine();
+                if (input.equalsIgnoreCase("n")) {
+                    System.out.println("El producto no se elimino!");
+                    Utilidades.enterParaContinuar();
+                    return;
+                } else if (input.equalsIgnoreCase("s")) {
+                    productos.remove(prod);
+                    System.out.println("Producto eliminado!");
+                    Utilidades.enterParaContinuar();
+                    return;
+                }
+            }
+        }
 
-        if (borrado)
-            System.out.println("Producto eliminado correctamente!");
-        else
-            System.out.println("No se encontró ningún producto con ese código!");
+        System.out.println("No se encontró ningún producto con ese código!");
 
         Utilidades.enterParaContinuar();
     }
