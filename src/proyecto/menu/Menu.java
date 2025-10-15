@@ -178,14 +178,12 @@ public class Menu {
                 String input = sc.nextLine();
                 if (input.equalsIgnoreCase("n")) {
                     System.out.println("El producto no se elimino!");
-                    Utilidades.enterParaContinuar();
-                    return;
                 } else if (input.equalsIgnoreCase("s")) {
                     productos.remove(prod);
                     System.out.println("Producto eliminado!");
-                    Utilidades.enterParaContinuar();
-                    return;
                 }
+                Utilidades.enterParaContinuar();
+                return;
             }
         }
 
